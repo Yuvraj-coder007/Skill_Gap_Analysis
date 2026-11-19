@@ -1,15 +1,15 @@
 import React, { useContext, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext';
+import { normalizeSkill } from '../utils/skills.js';
 
 const Quiz = () => {
     const { state } = useLocation();
     const navigate = useNavigate();
     const { setSkillRatings, skillRatings } = useContext(AppContext);
-    const { skill, rating } = state;
+    const { skill: rawSkill, rating } = state || {};
     const [selectedAnswers, setSelectedAnswers] = useState({});
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState("");
+    const skill = normalizeSkill(rawSkill);
 
     const quizQuestions = {
         HTML: [
@@ -175,7 +175,7 @@ const Quiz = () => {
         JavaScript: [
             {
                 question: "Which Data Type is not primitive?",
-                options: ["Sttring", "Number", "Object"],
+                options: ["String", "Number", "Object","Boolean"],
                 answer: "Object"
             },
             {
@@ -351,7 +351,7 @@ const Quiz = () => {
                 answer: "next"
             }
         ],
-        MongoDb: [
+        MongoDB: [
             {
                 question: "MongoDB is a type of which database?",
                 options: [
@@ -511,6 +511,10 @@ const Quiz = () => {
 
     };
 
+    if(!skill || !rating){
+        return <Navigate to='/analysis' replace/>;
+    }
+
     const questions = quizQuestions[skill] || [];
 
     const handleSubmit = async () => {
@@ -537,7 +541,6 @@ const Quiz = () => {
             <h1 className='text-3xl font-bold text-center text-indigo-700 mb-6'>
                 {skill} Skill Test
             </h1>
-            {error && <p role="alert" className='text-red-600 mb-4'>{error}</p>}
             <div className='space-y-8'>
                 {questions.map((q, index) => (
                     <div key={index} className='p-6 bg-gray-50 rounded-xl border border-gray-200 shadow-sm'>
@@ -563,8 +566,8 @@ const Quiz = () => {
                     </div>
                 ))}
             </div>
-            <button onClick={handleSubmit} disabled={saving} className='bg-indigo-600 text-white px-10 py-3 rounded-lg font-semibold text-lg hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-300 mt-8 disabled:opacity-60 disabled:cursor-not-allowed'>
-                {saving ? "Saving rating..." : "Submit Quiz"}
+            <button onClick={handleSubmit} className='bg-indigo-600 text-white px-10 py-3 rounded-lg font-semibold text-lg hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-300 mt-8 disabled:opacity-60 disabled:cursor-not-allowed'>
+                Submit Quiz
             </button>
         </div>
     )

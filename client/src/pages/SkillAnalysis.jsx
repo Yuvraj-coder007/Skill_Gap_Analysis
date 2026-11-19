@@ -1,17 +1,21 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { AppContext } from '../context/AppContext'
+import api from "../api/client.js";
 import { useNavigate } from 'react-router-dom'
 import SkillVerification from '../components/SkillVerification'
 
 const SkillAnalysis = () => {
-  const { selectedCareer, setSelectedCareer, skillRatings, setSkillRatings, generateRoadmap, skillVerification } = useContext(AppContext);
+  const { selectedCareer, setSelectedCareer, skillRatings, setSkillRatings, skillVerification } = useContext(AppContext);
   const navigate = useNavigate();
 
-  const careerSkillMap = {
-    frontend: ["HTML", "CSS", "JavaScript", "React", "Redux"],
-    backend: ["NodeJs", "Express", "MongoDb", "SQL", "API_Design"],
-    fullstack: ["HTML", "CSS", "JavaScript", "React", "NodeJs", "MongoDb"]
-  };
+  const [catalog, setCatalog] = useState({ skills: {}, careers: {} });
+  const [catalogError, setCatalogError] = useState('');
+
+  useEffect(() => {
+    api('/skills/catalog')
+      .then(setCatalog)
+      .catch((err) => setCatalogError(err.message || "Could not load skills"));
+  }, [])
 
   const handleRatingChange = (skill, rating) => {
     const currentRating = skillRatings[skill] || 0;
@@ -38,12 +42,14 @@ const SkillAnalysis = () => {
     navigate('/');
   };
 
-  const currentSkills = careerSkillMap[selectedCareer] || [];
+  const currentSkills = catalog.careers[selectedCareer] || [];
 
   return (
     <div className='min-h-screen bg-gray-50 px-6 py-10'>
       <div className='max-w-4xl mx-auto'>
         <h1 className='text-3xl font-bold text-gray-800 mb-2'>Skill Analysis</h1>
+        {catalogError && <p className='text-red-500 mb-4'>{catalogError}</p>}
+
 
         <div className='bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8'>
           <h2 className='text-xl font-semibold mb-4 flex items-center gap-2'>
@@ -74,7 +80,7 @@ const SkillAnalysis = () => {
               <div className='space-y-6'>
                 {currentSkills.map((skill) => (
                   <div key={skill} className='flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg'>
-                    <span className='font-semibold text-gray-700'>{skill}</span>
+                    <span className='font-semibold text-gray-700'>{catalog.skills[skill]?.label || skill}</span>
                     <SkillVerification verification={skillVerification[skill]} />
                     <div className='flex items-center gap-2'>
                       {
@@ -113,4 +119,4 @@ const SkillAnalysis = () => {
   )
 }
 
-export default SkillAnalysis
+export default SkillAnalysis;
